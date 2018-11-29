@@ -28,7 +28,7 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	      
 	      inputArea.setLayout(null);
 	      inputArea.setBounds(0, 0, 800, 250);
-	      inputArea.setBackground(Color.BLACK);
+	      inputArea.setBackground(Color.PINK);
 	      
 	      font1 = new Font("µ¸¿ò",Font.ITALIC,20);
 	      font2 = new Font("µ¸¿ò",Font.PLAIN,20);
