@@ -14,20 +14,6 @@ import java.sql.Statement;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
-
-class ContactsTest {
-	@Test
-	void testSqlUpdate() {
-		assertTrue(Contact_Management.sqlUpdate("INSERT INTO appoint_tbl(date,people,place) VALUES('»ó´ë¹æ','0109283722','1288428392')");
-	}
-	
-	@Test
-	void testConnprocess() {
-		assertTrue(Contact_Management.connprocess());
-	}
-}
 
 public class Contact_Management extends JFrame implements ActionListener{
   

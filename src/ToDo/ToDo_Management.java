@@ -18,20 +18,6 @@ import java.awt.event.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.*;
-
-class ToDoTest {
-	@Test
-	void testSqlUpdate() {
-		assertTrue(ToDo_Management.sqlUpdate("INSERT INTO appoint_tbl(date,people,place) VALUES('»ó´ë¹æ','0109283722','1288428392')");
-	}
-	
-	@Test
-	void testConnprocess() {
-		assertTrue(ToDo_Management.connprocess());
-	}
-}
 
 public class ToDo_Management extends JFrame implements ActionListener {
 	  
