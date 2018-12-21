@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.event.ActionListener;
+import java.sql.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -76,23 +77,6 @@ public class Menu extends JFrame {
    public static void main(String[] args) {
       new Menu();
       
-      String dbUrl ="jdbc:mysql://127.0.0.1/contacts_db?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
-	  String user = "sohyun";
-      String pass = "cute94";
-      
-      Connection conn = null;
-      
-      try{
-    	  Class.forName("com.mysql.cj.jdbc.Driver");
-    	  System.out.println("드라이버 검색 성공!");
-    	  conn = (Connection) DriverManager.getConnection(dbUrl, user, pass);
-    	  System.out.println("접속 성공!");
-      }catch (ClassNotFoundException e) {
-    	  System.out.println("드라이버 검색 실패!");
-    	  e.printStackTrace();
-      }catch (SQLException e) {
-    	  e.printStackTrace();
-      }
    }
 
 }
