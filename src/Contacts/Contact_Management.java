@@ -14,6 +14,9 @@ import java.sql.Statement;
 import javax.swing.*;
 import javax.swing.table.*;
 
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
 public class Contact_Management extends JFrame implements ActionListener{
   
   DefaultTableModel model;
