@@ -2,11 +2,25 @@ package ToDo;
 
 import java.awt.*;
 import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.table.*;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+import javax.swing.*;
+import javax.swing.table.*;
+import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.table.*;
 
 public class ToDo_Management extends JFrame implements ActionListener {
+	  
+	  DefaultTableModel model;
 	  JLabel [] labels = new JLabel [3];
 	  JTextField [] textfields = new JTextField [3];
 	  JButton insertBtn = new JButton("추가");
@@ -15,8 +29,15 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	  JTable table;
 	  JScrollPane scrollbar;
 	  Font font1, font2;
+	  
+	  Connection conn;
+	  Statement stmt;
+	  ResultSet rs;
 	   
 	public ToDo_Management() {
+		
+		 enableEvents(AWTEvent.WINDOW_EVENT_MASK);  
+		
 		  setTitle("To-Do");
 	      setSize(800,800);
 	      
@@ -28,7 +49,7 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	      
 	      inputArea.setLayout(null);
 	      inputArea.setBounds(0, 0, 800, 250);
-	      inputArea.setBackground(Color.BLACK);
+	      inputArea.setBackground(Color.PINK);
 	      
 	      font1 = new Font("돋움",Font.ITALIC,20);
 	      font2 = new Font("돋움",Font.PLAIN,20);
@@ -84,10 +105,10 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	     dataList.setBackground(Color.LIGHT_GRAY);
 	     dataList.setBounds(0,250, 800, 650);
 	     
-	     String [] colNames = {"작성일", "마감일", "상세내용"};
-	     Object [][] data;
+	     String [] colNames = {"No.", "작성일", "마감일", "상세내용"};
+	     Object [][] data = new String[0][4];
 	     
-	     DefaultTableModel model = new DefaultTableModel(colNames,0);
+	     model = new DefaultTableModel(data,colNames);
 	     table = new JTable(model);
 	     table.setFont(new Font("돋움",Font.PLAIN,20));
 	     table.setRowHeight(25);
@@ -112,9 +133,9 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	           int row = table.getSelectedRow();
 	           TableModel model = table.getModel();
 	           
-	           textfields[0].setText(model.getValueAt(row,0).toString());
-	           textfields[1].setText(model.getValueAt(row,1).toString());
-	           textfields[2].setText(model.getValueAt(row,2).toString());
+	           textfields[0].setText(model.getValueAt(row,1).toString());
+	           textfields[1].setText(model.getValueAt(row,2).toString());
+	           textfields[2].setText(model.getValueAt(row,3).toString());
 
 	        }
 
@@ -135,6 +156,14 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	        }
 	         
 	      });
+	      
+	      if(!this.connProcess()){		
+	    	  System.out.println("서버와 접속 실패하였습니다.");
+	    	  return;
+	      } else {
+	    	  this.sqlQuery("SELECT * FROM todo_tbl");
+	    	  System.out.println("정보를 불러옵니다.");
+	      }
 	}
 	
 	@Override
@@ -143,25 +172,74 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	      Object obj = e.getSource();
 	      if (obj instanceof JButton) {
 	         if (e.getSource() == insertBtn) {
-	           insert(); 
+	           
+	        	 nullToSpace();
+	        	 
+	        	 String sql = "INSERT INTO todo_tbl(date,due,content) VALUES("+ 
+	        			 		"'" + this.textfields[0].getText() + "'," +
+	        			 		"'" + this.textfields[1].getText() + "'," +
+	        			 		"'" + this.textfields[2].getText() + "')";
+	        	 if (sqlUpdate(sql)) {
+	        		 sqlQuery("SELECT * FROM todo_tbl");
+	        		 System.out.println("데이터 추가 성공");
+	        	 }else {
+	        		 System.out.println("데이터 추가 실패");
+	        	 }
+	        	 
+	        	 insert(); 
 	         }
 	         else if (e.getSource() == updateBtn) {
-	            update();
+	            
+	        	 nullToSpace();
+	        	 
+	        	 int row = table.getSelectedRow();
+	        	 if ( row < 0 ) {
+	        		 System.out.println("수정할 대상을 선택하세요.");
+	        		 return;
+	        	 }
+	        	 //선택한 row행의 0열
+	        	 String key_id = (String)model.getValueAt(row, 0);
+	        	 System.out.println(key_id);
+	        	 String sql = "UPDATE todo_tbl SET " +
+	        			 		"date" + "=" + "'" + 
+	        			 		this.textfields[0].getText() + "'," +
+	        			 		"due" + "=" + "'" + 
+	        			 		this.textfields[1].getText() + "'," +
+	        			 		"content" + "=" + "'" + 
+	        			 		this.textfields[2].getText() + "' " +
+	        			 		"WHERE id = " + key_id + "";
+	        	 if (sqlUpdate(sql)) {
+	        		 sqlQuery("SELECT * FROM todo_tbl");
+	        		 System.out.println("데이터 수정 성공");
+	        	 }else {
+	        		 System.out.println("데이터 수정 실패");
+	        	 }
+	        	 
+	        	 update();
 	         }
 	         else if (e.getSource() == deleteBtn) {
-	            delete();
+	        	 
+	        	 int row = table.getSelectedRow();
+	        	 if ( row < 0 ) {
+	        		 System.out.println("삭제할 대상을 선택하세요.");
+	        		 return;
+	        	 }
+	        	 String key_id = (String)model.getValueAt(row, 0);
+	        	 String sql = "DELETE FROM todo_tbl WHERE id = " + key_id + "";
+	        	 if (sqlUpdate(sql)) {
+	        		 sqlQuery("SELECT * FROM appoint_tbl");
+	        		 System.out.println("데이터 삭제 성공");
+	        	 }else {
+	        		 System.out.println("데이터 삭제 실패");
+	        	 }
+
+	        	 delete();
 	         }
 	      }
 	   }
 	   
 	   private void insert() {
 	      
-	      String [] arr = new String[3];
-	      arr[0] = textfields[0].getText();
-	      arr[1] = textfields[1].getText();
-	      arr[2] = textfields[2].getText();
-	      DefaultTableModel model = (DefaultTableModel) table.getModel();
-	      model.addRow(arr);
 	      initTextfields();
 	      
 	   }
@@ -172,15 +250,17 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	      if (row == -1)
 	         return;
 	      
-	      String [] arr = new String[3];
-	      arr[0] = textfields[0].getText();
+	      String [] arr = new String[4];
+	      arr[0] = row + "";
 	      arr[1] = textfields[1].getText();
 	      arr[2] = textfields[2].getText();
+	      arr[3] = textfields[3].getText();
 	      
 	      DefaultTableModel model = (DefaultTableModel) table.getModel();
 	      model.setValueAt(arr[0], row, 0);
 	      model.setValueAt(arr[1], row, 1);
 	      model.setValueAt(arr[2], row, 2);
+	      model.setValueAt(arr[3], row, 3);
 	   }
 	   
 	   private void delete() {
@@ -197,5 +277,90 @@ public class ToDo_Management extends JFrame implements ActionListener {
 	      textfields[1].setText("");
 	      textfields[2].setText("");
 	   }
+	   private void nullToSpace() {
+	       if (textfields[0].getText() == null ) {
+	    	   textfields[0].setText(" ");
+	       }else if (textfields[1].getText() == null){
+	    	   textfields[1].setText(" ");
+	       }else if (textfields[2].getText() == null){
+	    	   textfields[2].setText(" ");
+	       }
+	   }
+	   
+	   public boolean connProcess() {  // sql 연결 메소드
+		   
+		   String dbUrl ="jdbc:mysql://127.0.0.1/schema?characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false";
+			  String user = "sohyun";
+		      String pass = "cute94";
+		      
+		      conn = null;
+		      stmt = null;
+		      
+		      try{
+		    	  Class.forName("com.mysql.cj.jdbc.Driver");
+		    	  System.out.println("드라이버 검색 성공!");
+		    	  conn = (Connection)DriverManager.getConnection(dbUrl, user, pass);
+		    	  System.out.println("접속 성공!");
+		      }catch (ClassNotFoundException e) {
+		    	  System.out.println("드라이버 검색 실패!");
+		    	  e.printStackTrace();
+		    	  return false;
+		      }catch (SQLException e) {
+		    	  e.printStackTrace();
+		    	  return false;
+		      }
+		      return true;
+	   }   
+	   
+	   public void sqlQuery(String sql){ // SQL문실행 + 결과셋얻음 + SELECT문 전담메소드
+		   Statement stmt = null;
+		   try {
+			   stmt = conn.createStatement();
+			   ResultSet rs = stmt.executeQuery(sql);
+			   model.setNumRows(0);
+			   while(rs.next()){
+				   String data [] = {
+					   rs.getInt("id")+"",
+					   rs.getString("date"),
+					   rs.getString("due"),
+					   rs.getString("content")
+				   	};
+				   model.addRow(data);
+			   }
+		   }catch(Exception e){
+			   System.out.println("데이터 select실패 : " + e.getMessage());
+		   }finally {
+			   try{
+				   stmt.close();
+			   }catch(Exception e){}
+		   }
+	   }  
+	   public boolean sqlUpdate(String sql) {  // SQL문실행 (결과셋없는 delete, update같은)
+		   Statement stmt = null;
+		   try {
+			   stmt = conn.createStatement();
+			   int i = stmt.executeUpdate(sql);
+			   System.out.println(i+"개의 데이터 업데이트 성공");
+			   return true;
+		   }catch(Exception e) {
+			   System.out.println("데이터 업데이트 실패 : " + e.getMessage());
+			   return false;
+		   }finally{
+			   try{
+				   stmt.close();
+			   }catch(Exception e) {}
+		   }
+	   }
 
+	   protected void processWindowEvent(WindowEvent e) { // 윈도우창 엑스 눌러 종료시
+		   super.processWindowEvent(e);
+		   if (e.getID() == WindowEvent.WINDOW_CLOSING) {
+			   try {
+				   if(conn != null) {
+				   	   conn.close();
+				   }
+			   }catch(Exception e1) {}
+			   this.setVisible(false);
+		   }
+	   }
 }
